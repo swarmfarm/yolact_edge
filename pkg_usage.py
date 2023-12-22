@@ -1,10 +1,18 @@
+import os
+import logging
 import numpy as np
 import urllib
 import time
 import cv2
+from pathlib import Path
 from yolact_edge.inference import YOLACTEdgeInference
+from yolact_edge.utils.logging_helper import setup_logger
 
-weights = "yolact_edge_resnet50_54_800000.pth"
+
+setup_logger(logging_level=logging.INFO)
+
+
+weights = "weights/yolact_edge_resnet50_54_800000.pth"
 # All available model configs, depends on which weights
 # you use. More info could be found in data/config.py.
 model_configs = [
@@ -20,7 +28,8 @@ model_configs = [
     'yolact_edge_vid_trainflow_resnet50_config',
     'yolact_edge_youtubevis_resnet50_config',
 ]
-config = model_configs[5]
+config = model_configs[7]
+print("config:", config)
 # All available model datasets, depends on which weights
 # you use. More info could be found in data/config.py.
 datasets = [
@@ -43,20 +52,32 @@ model_inference = YOLACTEdgeInference(
 
 img = None
 
-try:
-    with urllib.request.urlopen("http://images.cocodataset.org/val2017/000000439715.jpg") as f:
-        img = np.asarray(bytearray(f.read()), dtype="uint8")
-        img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-except:
-    pass
+# try:
+#     with urllib.request.urlopen("http://images.cocodataset.org/val2017/000000439715.jpg") as f:
+#         img = np.asarray(bytearray(f.read()), dtype="uint8")
+#         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+# except:
+#     pass
 
-if img is None:
-    print("Couldn't retrieve image for benchmark...")
-    exit(1)
+image_path = Path("data/programmatic_inference_testing/swarmfarm")
+image_path = Path("data/programmatic_inference_testing/coco")
 
-print("Benchmarking performance...")
-start = time.time()
-samples = 200
-for i in range(samples):
-    p = model_inference.predict(img, False)
+for im_file in image_path.glob("**/*"):
+    print("Image:", im_file.name)
+    img = cv2.imread(str(im_file), cv2.IMREAD_COLOR)
+    print(img.shape)
+
+    if img is None:
+        print("Couldn't retrieve image for benchmark...")
+        exit(1)
+
+    print("Benchmarking performance...")
+    start = time.time()
+    samples = 200
+    exit()
+    for i in range(samples):
+        p = model_inference.predict(img, False)
+
+    break
+
 print(f"Average {1 / ( (time.time() - start) / samples )} FPS")

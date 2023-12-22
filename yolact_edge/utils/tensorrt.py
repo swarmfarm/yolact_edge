@@ -22,6 +22,10 @@ def convert_to_tensorrt(net, cfg, args, transform):
                 setattr(cfg, key[:-5], True)
 
     use_tensorrt_conversion = any(getattr(cfg, key, False) for key in torch2trt_flags)
+
+    print("args.use_fp16_tensorrt", args.use_fp16_tensorrt)
+    print("use_tensorrt_conversion", use_tensorrt_conversion)
+
     if use_tensorrt_conversion:
         logger.info("Converting to TensorRT...")
     else:

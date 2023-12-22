@@ -1075,6 +1075,11 @@ def evaluate(net:Yolact, dataset, train_mode=False, train_cfg=None):
 
         else:
             # Main eval loop
+            logging.basicConfig(
+                level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            logger_as = logging.getLogger("yolact_eval_debug_as")
+            from tqdm import tqdm
             for it, image_idx in enumerate(dataset_indices):
                 timer.reset()
 
@@ -1088,19 +1093,23 @@ def evaluate(net:Yolact, dataset, train_mode=False, train_cfg=None):
                         np.save('scripts/gt.npy', gt_masks)
 
                     batch = Variable(img.unsqueeze(0))
+
                     if args.cuda:
                         batch = batch.cuda()
 
                 with timer.env('Network Extra'):
                     extras = {"backbone": "full", "interrupt": False,
                               "moving_statistics": {"aligned_feats": []}}
+                    logger_as.debug("as-debug running inference...")
                     preds = net(batch, extras=extras)["pred_outs"]
 
                 # Perform the meat of the operation here depending on our mode.
                 if args.display:
                     img_numpy = prep_display(preds, img, h, w)
                 elif args.benchmark:
+                    logger_as.debug("as-debug post-processing inference...")
                     prep_benchmark(preds, h, w)
+                    logger_as.debug("as-debug inference ready")
                 else:
                     prep_metrics(ap_data, preds, img, gt, gt_masks, h, w, num_crowd, dataset.ids[image_idx], detections)
 

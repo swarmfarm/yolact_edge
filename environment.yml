@@ -1,0 +1,16 @@
+name: venv_perception
+channels:
+  - conda-forge
+  - nvidia
+dependencies:
+  - python=3.8
+  - pip
+  - pip:
+    - numpy=1.23.4
+    - cython=0.29
+    - opencv-python
+    - pillow
+    - matplotlib
+    - GitPython
+    - termcolor
+    - tensorboard

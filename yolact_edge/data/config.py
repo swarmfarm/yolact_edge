@@ -230,7 +230,14 @@ youtube_vis_dataset = dataset_base.copy({
     'is_video': True
 })
 
+sf_perception_dataset = dataset_base.copy({
+    "name": "SwarmFarm Perception V1 Dataset",
 
+    "has_gt": False,
+    "class_names": ("person", "vehicle", "tree", "bush", "long_grass", "weed"),
+
+    "label_map": { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6 } ,
+})
 
 
 

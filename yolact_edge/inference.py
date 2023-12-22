@@ -13,6 +13,10 @@ from yolact_edge.utils.tensorrt import convert_to_tensorrt
 import argparse
 import random
 
+import logging
+logger = logging.getLogger("yolact_edge_predict")
+
+
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -150,6 +154,10 @@ class YOLACTEdgeInference(object):
             if item in args:
                 args[item] = args_ovr[item]
 
+        # args.disable_tensorrt = True  # TODO: remove this when we want to run fast in production
+        # if not args.disable_tensorrt:
+        #     assert False
+
         with torch.no_grad():
             if torch.cuda.is_available():
                 cudnn.fastest = True
@@ -198,6 +206,8 @@ class YOLACTEdgeInference(object):
             if scores[j] < args.score_threshold:
                 num_dets_to_consider = j
                 break
+
+        return (None, classes, scores, masks)  # as-debug
 
         if num_dets_to_consider == 0:
             # No detections found so just output the original image
@@ -285,6 +295,13 @@ class YOLACTEdgeInference(object):
         return (img_numpy, classes, scores, masks)
 
     def predict(self, img, show=False):
+        # as-debug
+        args.display_bboxes = False
+        args.display_lincomb = False
+        args.display_masks = False
+        args.display_scores = False
+        args.display_text = False
+
         frame = torch.Tensor(img).cuda().float()
         batch = FastBaseTransform()(frame.unsqueeze(0))
 
@@ -292,10 +309,14 @@ class YOLACTEdgeInference(object):
                   "keep_statistics": False, "moving_statistics": None}
 
         with torch.no_grad():
+            logger.debug("as-debug running inference...")
             preds = self.net(batch, extras=extras)["pred_outs"]
 
+            logger.debug("as-debug post-processing inference...")
             out = self.prep_output(
                 preds, frame, None, None, undo_transform=False)
+            
+            logger.debug("as-debug inference ready")
 
         if out == None:
             print("No predictions!")
