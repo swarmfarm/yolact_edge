@@ -12,9 +12,10 @@ from yolact_edge.data import COLORS, set_dataset
 from yolact_edge.utils.tensorrt import convert_to_tensorrt
 import argparse
 import random
+import time  # debug as
 
 import logging
-logger = logging.getLogger("yolact_edge_predict")
+logger_as = logging.getLogger("yolact_edge_predict")
 
 
 
@@ -137,6 +138,9 @@ class YOLACTEdgeInference(object):
 
     def __init__(self, weights, model_config, dataset, calib_images, config_ovr={}, args_ovr={}):
         print("Configuring YOLACT edge...")
+
+        # Currently, this class won't pickle for multiprocessing as the 'defaultdict' 
+        #   type isn't pickle-able
         self.color_cache = defaultdict(lambda: {})
 
         global cfg
@@ -150,14 +154,21 @@ class YOLACTEdgeInference(object):
         args = parse_args()
         args.dataset = dataset
         set_dataset(args.dataset)
-        for item in args_ovr:
-            if item in args:
-                args[item] = args_ovr[item]
 
-        # args.disable_tensorrt = True  # TODO: remove this when we want to run fast in production
-        # if not args.disable_tensorrt:
-        #     assert False
+        # for item in args_ovr:
+        #     if item in args:
+        #         args[item] = args_ovr[item]
 
+        # The "args override" code just above throws errors, so this had to be added
+        #   in to make sure overrides were handled properly
+        args.disable_tensorrt = args_ovr["disable_tensorrt"]  # TensorRT args
+        args.use_fp16_tensorrt = args_ovr["use_fp16_tensorrt"]
+        args.display_bboxes = args_ovr["display_bboxes"]  # Display args
+        args.display_lincomb = args_ovr["display_lincomb"]
+        args.display_masks = args_ovr["display_masks"]
+        args.display_scores = args_ovr["display_scores"]
+        args.display_text = args_ovr["display_text"]
+        
         with torch.no_grad():
             if torch.cuda.is_available():
                 cudnn.fastest = True
@@ -237,8 +248,6 @@ class YOLACTEdgeInference(object):
             if scores[j] < args.score_threshold:
                 num_dets_to_consider = j
                 break
-
-        return (None, classes, scores, masks)  # as-debug
 
         if num_dets_to_consider == 0:
             # No detections found so just output the original image
@@ -326,12 +335,8 @@ class YOLACTEdgeInference(object):
         return (img_numpy, classes, scores, masks)
 
     def predict(self, img, show=False):
-        # as-debug
-        args.display_bboxes = False
-        args.display_lincomb = False
-        args.display_masks = False
-        args.display_scores = False
-        args.display_text = False
+
+        timer.reset()
 
         frame = torch.Tensor(img).cuda().float()
         batch = FastBaseTransform()(frame.unsqueeze(0))
@@ -340,14 +345,20 @@ class YOLACTEdgeInference(object):
                   "keep_statistics": False, "moving_statistics": None}
 
         with torch.no_grad():
-            logger.debug("as-debug running inference...")
+            inference_time_start = time.time()
+            logger_as.debug("running torch inference...")          
             preds = self.net(batch, extras=extras)["pred_outs"]
+            logger_as.debug("torch inference made in %s ms", 
+                            (time.time() - inference_time_start) * 1000)
 
-            logger.debug("as-debug post-processing inference...")
-            out = self.prep_output(
-                preds, frame, None, None, undo_transform=False)
-            
-            logger.debug("as-debug inference ready")
+            prep_start_time = time.time()
+            logger_as.debug("post-processing results...")
+            # out = self.prep_output(
+            #     preds, frame, None, None, undo_transform=False)
+            out = self.prep_output_lightweight(  # as-debug
+                preds, frame, None, None, undo_transform=False)            
+            logger_as.debug("post-processing complete in %s ms",
+                            (time.time() - prep_start_time) * 1000)
 
         if out == None:
             print("No predictions!")
@@ -359,5 +370,7 @@ class YOLACTEdgeInference(object):
             plt.imshow(img_numpy)
             plt.title("YOLACT Edge Predictions")
             plt.show()
+
+        timer.print_stats()
 
         return {"img": img_numpy, "class": classes, "score": scores, "mask": masks.squeeze()}
