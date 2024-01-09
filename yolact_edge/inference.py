@@ -175,7 +175,38 @@ class YOLACTEdgeInference(object):
             convert_to_tensorrt(net, cfg, args, transform=BaseTransform())
             net = net.cuda()
             self.net = net
-            print("Model ready for inference...")
+
+    def prep_output_lightweight(self, dets_out, img, h, w, undo_transform=True, class_color=False, mask_alpha=0.45):  # as-debug
+        """
+        Note: If undo_transform=False then im_h and im_w are allowed to be None.
+        """
+        if undo_transform:
+            raise NotImplementedError("Image transformation operations are not supported in this lightweight version")
+            img_numpy = undo_image_transformation(img, w, h)
+            img_gpu = torch.Tensor(img_numpy).cuda()
+        else:
+            h, w, _ = img.shape
+
+        with timer.env('Postprocess'):
+            t = postprocess(dets_out, w, h, visualize_lincomb=args.display_lincomb,
+                            crop_masks=args.crop,
+                            score_threshold=args.score_threshold)
+            torch.cuda.synchronize()
+
+        with timer.env('Copy'):
+            if cfg.eval_mask_branch:
+                # Masks are drawn on the GPU, so don't copy
+                masks = t[3][:args.top_k]
+            classes, scores, boxes = [
+                x[:args.top_k].cpu().detach().numpy() for x in t[:3]]
+
+        num_dets_to_consider = min(args.top_k, classes.shape[0])
+        for j in range(num_dets_to_consider):
+            if scores[j] < args.score_threshold:
+                num_dets_to_consider = j
+                break
+
+        return (img.byte().cpu().numpy(), classes, scores, masks)
 
     def prep_output(self, dets_out, img, h, w, undo_transform=True, class_color=False, mask_alpha=0.45):
         """
