@@ -802,14 +802,31 @@ yolact_base_config = coco_base_config.copy({
     'use_tensorrt_safe_mode': False,
 })
 
-yolact_edge_config = yolact_base_config.copy({
+yolact_resnet50_config = yolact_base_config.copy({
+    'name': 'yolact_resnet50',
+
+    'backbone': resnet50_backbone.copy({
+        'selected_layers': list(range(1, 4)),
+
+        'pred_scales': yolact_base_config.backbone.pred_scales,
+        'pred_aspect_ratios': yolact_base_config.backbone.pred_aspect_ratios,
+        'use_pixel_scales': True,
+        'preapply_sqrt': False,
+        'use_square_anchors': True, # This is for backward compatability with a bug
+    }),
+})
+
+yolact_edge_config = yolact_resnet50_config.copy({
     'name': 'yolact_edge',
     'torch2trt_max_calibration_images': 100,
     'torch2trt_backbone_int8': True,
     'torch2trt_protonet_int8': True,
     'torch2trt_fpn': True,
     'torch2trt_prediction_module': True,
-    'use_fast_nms': False
+    'use_fast_nms': False,
+    'dataset': sf_perception_dataset,
+    'num_classes': len(sf_perception_dataset.class_names) + 1,
+    'backbone': resnet101_backbone
 })
 
 yolact_edge_mobilenetv2_config = yolact_edge_config.copy({
@@ -903,20 +920,6 @@ yolact_edge_youtubevis_config = yolact_edge_vid_config.copy({
         'fine_tune_layers': None,
         'use_spa': False
     })
-})
-
-yolact_resnet50_config = yolact_base_config.copy({
-    'name': 'yolact_resnet50',
-
-    'backbone': resnet50_backbone.copy({
-        'selected_layers': list(range(1, 4)),
-
-        'pred_scales': yolact_base_config.backbone.pred_scales,
-        'pred_aspect_ratios': yolact_base_config.backbone.pred_aspect_ratios,
-        'use_pixel_scales': True,
-        'preapply_sqrt': False,
-        'use_square_anchors': True, # This is for backward compatability with a bug
-    }),
 })
 
 yolact_resnet152_config = yolact_base_config.copy({
