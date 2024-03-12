@@ -233,35 +233,18 @@ youtube_vis_dataset = dataset_base.copy({
 sf_perception_dataset = dataset_base.copy({
     "name": "SwarmFarm Perception V1 Dataset",
 
-    'train_images': None,
-    'train_info':   None, 
+    'train_images': '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/train_split/data/',
+    'train_info':   '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/train_split/labels.json',
 
-    'valid_images': '',
-    'valid_info':   None,
+    'valid_images': '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/val_split/data/',
+    'valid_info':   '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/val_split/labels.json',
 
-    'has_gt': False,
-    'class_names': COCO_CLASSES, # try to recognise coco classes in our own data
+    'has_gt': True,
+    # 'class_names': COCO_CLASSES, # try to recognise coco classes in our own data
     
     # Use these classes when training fresh on SwarmFarm data
-    # "class_names": ("person", "vehicle", "tree", "bush", "long_grass", "weed"),
-    # "label_map": { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6 } ,
-
-    # below is only needed for YTVIS-style video dataset.
-
-    # whether samples all frames or key frames only.
-    'use_all_frames': True,
-
-    # the following four lines define the frame sampling strategy for the given dataset.
-    'frame_offset_lb': 1,
-    'frame_offset_ub': 4,
-    'frame_offset_multiplier': 1,
-    'all_frame_direction': 'allway',
-
-    # 1 of K frames is annotated
-    'images_per_video': 1,
-
-    # declares a video dataset
-    'is_video': False
+    "class_names": ("person", "vehicle", "tree", "bush", "long_grass", "weed"),
+    "label_map": { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6 } ,
 })
 
 
