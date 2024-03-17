@@ -318,11 +318,11 @@ def train(rank, args):
     global loss_types # Forms the print order
     loss_avgs  = { k: MovingAverage(100) for k in loss_types }
 
-    def backward_and_log(prefix, net_outs, targets, masks, num_crowds, extra_loss=None):
+    def backward_and_log(prefix, net_outs, targets, masks, num_crowds, filenames, extra_loss=None):
         optimizer.zero_grad()
 
         out = net_outs["pred_outs"]
-        losses = criterion(out, targets, masks, num_crowds)
+        losses = criterion(out, targets, masks, num_crowds, filenames)
 
         losses = {k: v.mean() for k, v in losses.items()}  # Mean here because Dataparallel
 
@@ -425,12 +425,13 @@ def train(rank, args):
                         # Note, for training on multiple gpus this will use the custom replicate and gather I wrote up there
                         images, targets, masks, num_crowds = prepare_data(joint_datum)
                     else:
-                        images, targets, masks, num_crowds = prepare_data(datum)
+                        images, targets, masks, num_crowds, filenames = prepare_data(datum)
+                    
                     extras = {"backbone": "full", "interrupt": False,
                               "moving_statistics": {"aligned_feats": []}}
                     net_outs = net(images,extras=extras)
                     run_name = "joint" if cfg.dataset.joint else "compute"
-                    losses = backward_and_log(run_name, net_outs, targets, masks, num_crowds)
+                    losses = backward_and_log(run_name, net_outs, targets, masks, num_crowds, filenames)
 
                 # Forward Pass
                 if cfg.dataset.is_video:
@@ -642,7 +643,7 @@ def prepare_flow_data(datum):
 
 
 def prepare_data(datum):
-    images, (targets, masks, num_crowds) = datum
+    images, (targets, masks, num_crowds, filenames) = datum
     
     if args.cuda:
         images = Variable(images.cuda(non_blocking=True), requires_grad=False)
@@ -653,7 +654,7 @@ def prepare_data(datum):
         targets = [Variable(ann, requires_grad=False) for ann in targets]
         masks = [Variable(mask, requires_grad=False) for mask in masks]
 
-    return images, targets, masks, num_crowds
+    return images, targets, masks, num_crowds, filenames
 
 def compute_validation_loss(net, data_loader, criterion):
     global loss_types

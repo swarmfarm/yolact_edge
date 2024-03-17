@@ -123,8 +123,8 @@ class COCODetection(data.Dataset):
             tuple: Tuple (image, (target, masks, num_crowds)).
                    target is the object returned by ``coco.loadAnns``.
         """
-        im, gt, masks, h, w, num_crowds = self.pull_item(index)
-        return im, (gt, masks, num_crowds)
+        im, gt, masks, h, w, num_crowds, img_filename = self.pull_item(index)        
+        return im, (gt, masks, num_crowds, img_filename)
 
     def __len__(self):
         return len(self.ids)
@@ -211,8 +211,7 @@ class COCODetection(data.Dataset):
         if target is not None and target.shape[0] == 0:
             print('Warning: Augmentation output an example with no ground truth. Resampling...')
             return self.pull_item(random.randint(0, len(self.ids)-1))
-
-        return torch.from_numpy(img).permute(2, 0, 1), target, masks, height, width, num_crowds
+        return torch.from_numpy(img).permute(2, 0, 1), target, masks, height, width, num_crowds, file_name
 
     def pull_image(self, index):
         '''Returns the original image object at index in PIL form

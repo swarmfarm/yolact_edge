@@ -43,7 +43,7 @@ class MultiBoxLoss(nn.Module):
         self.l1_expected_area = 20*20/70/70
         self.l1_alpha = 0.1
 
-    def forward(self, predictions, targets, masks, num_crowds):
+    def forward(self, predictions, targets, masks, num_crowds, filenames):
         """Multibox Loss
         Args:
             predictions (tuple): A tuple containing loc preds, conf preds,
