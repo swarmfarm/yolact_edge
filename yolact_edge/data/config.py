@@ -85,6 +85,105 @@ COCO_INTER_LABEL_MAP = {COCO_INV_LABEL_MAP[COCO_CLASSES.index(coco) + 1]: COCO_C
 MOTS_CLASSES = ('car', 'pedestrian')
 MOTS_LABEL_MAP = {1: 1, 2: 2}
 
+SF_CLASSES = ("bush", "long_grass", "person", "tree", "vehicle", "weed")#, "unknown")
+SF_LABEL_MAP = { 0:  1,  1:  2,  2:  3,  3:  4,  4:  5,  5:  6 }
+# SF_LABEL_MAP = { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6 }
+
+# # Index of each class in the SF_CLASSES array
+# bush_index = SF_CLASSES.index("bush")
+# long_grass_index = SF_CLASSES.index("long_grass")
+# person_index = SF_CLASSES.index("person")
+# tree_index = SF_CLASSES.index("tree")
+# vehicle_index = SF_CLASSES.index("vehicle")
+# weed_index = SF_CLASSES.index("weed")
+# unknown_index = SF_CLASSES.index("unknown")
+
+# # Mapping of each COCO class to a suitable swarmfarm class
+# # TODO: this mapping object doesn't work in the same way as the other "maps" in this 
+# #    config class. COCO_TO_SF_CLASS_MAP 
+# COCO_TO_SF_CLASS_MAP = { 
+#     1:  person_index,  
+#     2:  vehicle_index,  
+#     3:  vehicle_index,  
+#     4:  vehicle_index,  
+#     5:  vehicle_index,  
+#     6:  vehicle_index,  
+#     7:  vehicle_index,  
+#     8:  vehicle_index,                         
+#     9:  vehicle_index, 
+#     10: unknown_index, 
+#     11: unknown_index, 
+#     13: unknown_index, 
+#     14: unknown_index, 
+#     15: unknown_index, 
+#     16: unknown_index, 
+#     17: unknown_index,                         
+#     18: unknown_index, 
+#     19: unknown_index, 
+#     20: unknown_index, 
+#     21: unknown_index, 
+#     22: unknown_index, 
+#     23: unknown_index, 
+#     24: unknown_index, 
+#     25: unknown_index,                         
+#     27: unknown_index,     
+#     28: unknown_index, 
+#     31: unknown_index, 
+#     32: unknown_index, 
+#     33: unknown_index, 
+#     34: unknown_index, 
+#     35: unknown_index, 
+#     36: unknown_index,                         
+#     37: unknown_index, 
+#     38: unknown_index, 
+#     39: unknown_index, 
+#     40: unknown_index, 
+#     41: unknown_index, 
+#     42: unknown_index, 
+#     43: unknown_index, 
+#     44: unknown_index,                         
+#     46: unknown_index, 
+#     47: unknown_index, 
+#     48: unknown_index, 
+#     49: unknown_index, 
+#     50: unknown_index, 
+#     51: unknown_index, 
+#     52: unknown_index, 
+#     53: unknown_index,                         
+#     54: unknown_index, 
+#     55: unknown_index, 
+#     56: unknown_index, 
+#     57: unknown_index, 
+#     58: unknown_index, 
+#     59: unknown_index, 
+#     60: unknown_index, 
+#     61: unknown_index,                         
+#     62: unknown_index, 
+#     63: unknown_index, 
+#     64: unknown_index, 
+#     65: unknown_index, 
+#     67: unknown_index, 
+#     70: unknown_index, 
+#     72: unknown_index, 
+#     73: unknown_index,
+#     74: unknown_index, 
+#     75: unknown_index, 
+#     76: unknown_index, 
+#     77: unknown_index, 
+#     78: unknown_index, 
+#     79: unknown_index, 
+#     80: unknown_index, 
+#     81: unknown_index,                     
+#     82: unknown_index, 
+#     84: unknown_index, 
+#     85: unknown_index, 
+#     86: unknown_index, 
+#     87: unknown_index, 
+#     88: unknown_index, 
+#     89: unknown_index, 
+#     90: unknown_index
+# }
+
 # ----------------------- CONFIG CLASS ----------------------- #
 
 class Config(object):
@@ -232,19 +331,27 @@ youtube_vis_dataset = dataset_base.copy({
 
 sf_perception_dataset = dataset_base.copy({
     "name": "SwarmFarm Perception V1 Dataset",
+    
+    # Full, unsplit dataset for training without the effects of any dataset preprocessing (e.g. splitting, normalisation, etc.)
+#     'train_images': '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/images',
+#     'train_info':   '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/annotations/batch_01.json',
+    
+#     'valid_images': '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/images',
+#     'valid_info':   '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/annotations/batch_01.json',
+    
+    # Split datasets for training and validation experiments
+    'train_images': '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/proto_split/data',
+    'train_info':   '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/proto_split/labels.json',
 
-    'train_images': '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/train_split/data/',
-    'train_info':   '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/train_split/labels.json',
-
-    'valid_images': '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/val_split/data/',
-    'valid_info':   '/datasets/swarmfarm-vision/datasets/swarmfarm/development/batch_01/val_split/labels.json',
+    'valid_images': '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/proto_split/data',
+    'valid_info':   '/notebooks/yolact_edge/data/swarmfarm/development/batch_01/proto_split/labels.json',
 
     'has_gt': True,
     # 'class_names': COCO_CLASSES, # try to recognise coco classes in our own data
     
     # Use these classes when training fresh on SwarmFarm data
-    "class_names": ("person", "vehicle", "tree", "bush", "long_grass", "weed"),
-    "label_map": { 1:  1,  2:  2,  3:  3,  4:  4,  5:  5,  6:  6 } ,
+    "class_names": SF_CLASSES,
+    "label_map": SF_LABEL_MAP,
 })
 
 
@@ -816,7 +923,7 @@ yolact_resnet50_config = yolact_base_config.copy({
     }),
 })
 
-yolact_edge_config = yolact_resnet50_config.copy({
+yolact_edge_config = yolact_base_config.copy({
     'name': 'yolact_edge',
     'torch2trt_max_calibration_images': 100,
     'torch2trt_backbone_int8': True,
@@ -824,9 +931,8 @@ yolact_edge_config = yolact_resnet50_config.copy({
     'torch2trt_fpn': True,
     'torch2trt_prediction_module': True,
     'use_fast_nms': False,
-    'dataset': sf_perception_dataset,
-    'num_classes': len(sf_perception_dataset.class_names) + 1,
-    'backbone': resnet101_backbone
+    # 'dataset': sf_perception_dataset,
+    # 'num_classes': len(sf_perception_dataset.class_names) + 1,
 })
 
 yolact_edge_mobilenetv2_config = yolact_edge_config.copy({
